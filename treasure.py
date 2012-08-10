@@ -4,7 +4,7 @@ import xmlrpclib
 from collections import deque
 from time import time, sleep
 
-QUERY_INTERVAL = 2 * 60 # In seconds, intervals between queries to PYPI, 2 min.
+QUERY_INTERVAL = 15 # In seconds, intervals between queries to PYPI, 2 min.
 PYPI_SERVICE = 'http://pypi.python.org/pypi'
 CLASSIFIERS = frozenset(('Programming Language :: Python :: 3',
                          'Programming Language :: Python :: 3.0',
@@ -23,13 +23,15 @@ def get_meta(name, version, service=PYPI_SERVICE):
         meta = client.release_data(name, version)
     return meta
 
-def process_update_queue(queue, classifiers=CLASSIFIER, ):
+def process_update_queue(queue, classifiers=None):
     result = []
     for updated in queue: # Updates can come before new.
         name, version = updated
-        meta = get_meta(name, version, client)
-        if classifiers.intersection(meta.get('classifiers')):
-            result.append(name, meta)
+        meta = get_meta(name, version)
+        if classifiers is None:
+            result.append((name, meta))
+        elif classifiers.intersection(meta.get('classifiers')):
+            result.append((name, meta))
     return result
 
 def check_for_updates(supported, classifiers=CLASSIFIERS,
@@ -42,7 +44,11 @@ def check_for_updates(supported, classifiers=CLASSIFIERS,
         if not firstrun:
             endprocessing = time()
             processingtime = endprocessing - startprocessing
+        else:
+            processingtime = interval
         sleep(processingtime)
+        if firstrun:
+            firstrun = False
         result = []
         startprocessing = time() # Let's do this!
         client = xmlrpclib.ServerProxy(service)
@@ -61,34 +67,37 @@ def check_for_updates(supported, classifiers=CLASSIFIERS,
                         queue.appendleft((name, version))
                     elif 'new release' in actions or 'classifiers' in actions:
                         queue.append((name, version))
-                result = process_update_queue(queue)
+            result = process_update_queue(queue)
             try:
                 if result:
-                    yield queue.next()
-            except StopIteration:
+                    yield result.pop()
+            except IndexError:
                 continue
-        
-        if firstrun:
-            firstrun = False
-
 
 def get_supported(classifiers=CLASSIFIERS, service=PYPI_SERVICE):
     """ Builds a set of the PYPI-projects currently listed under the provided
         classifiers.
     """
     client = xmlrpclib.ServerProxy(service)
-    multicall = xmlrpclib.MultiCall(client)
-    [multicall.browse([classifier]) for classifier in classifiers]
-    supported = set()
-    for results in multicall(): # Returns a list of ['projectname', 'version']
-        supported = supported.union([result[0] for result in results])
+    if isinstance(classifiers, basestring):
+        supported = set([module[0] for module in client.browse([classifiers])])
+        # Returns a list of ['projectname', 'version']
+    else:
+        multicall = xmlrpclib.MultiCall(client)
+        [multicall.browse([classifier]) for classifier in classifiers]
+        supported = set()
+        for results in multicall():
+            supported = supported.union([result[0] for result in results])
     return supported
 
+def troves(troves, interval=QUERY_INTERVAL, service=PYPI_SERVICE):
+    supported = get_supported(troves)
+    return check_for_updates(supported, troves, interval, service)
+
+def get_all():
+    return check_for_updates(supported, troves, interval, service)
 
 if __name__ == '__main__':
-    supported = get_supported()
-    sleep(QUERY_INTERVAL)
-    while True:
-        for module in check_for_updates(supported)
-            print module
-
+    from pprint import pprint
+    for result in troves(CLASSIFIERS):
+        pprint(result)
