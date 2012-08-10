@@ -27,34 +27,42 @@ def check_for_updates(supported, classifiers=CLASSIFIERS,
     """ Checks for new projects and updates.
         Returns the overall processingtime in seconds.
     """
-    startprocessing = time() # Let's do this!
-    client = xmlrpclib.ServerProxy(service)
-    since = int(startprocessing - interval)
-    updates = client.changelog(since)
-    # [['vimeo', '0.1.2', 1344087619,'update description, classifiers'], ...]]
+    firstrun = True
+    while True:
+        if not firstrun:
+            endprocessing = time()
+            processingtime = endprocessing - startprocessing
+        sleep(processingtime)
+        startprocessing = time() # Let's do this!
+        client = xmlrpclib.ServerProxy(service)
+        since = int(startprocessing - interval)
+        updates = client.changelog(since)
+        # [['vimeo', '0.1.2', 1344087619,
+        # 'update description, classifiers'], ...]]
+        
+        if updates:
+            queue = deque() # Since actions can share timestamp.
+
+            for module in updates:
+                name, version, timestamp, actions = module
+                if name not in supported:
+                    if 'create' in actions:
+                        queue.appendleft((name, version))
+                    elif 'new release' in actions or 'classifiers' in actions:
+                        queue.append((name, version))
+
+            for updated in queue: # Updates can come before new.
+                name, version = updated
+                meta = get_meta(name, version, client)
+                if classifiers.intersection(meta.get('classifiers')):
+                    supported.add(name)
+                    post_to_twitter(name, meta)
+        yield queue
+        if firstrun:
+            firstrun = False
+        
+        
     
-    if updates:
-        print updates # Log to heroku.
-        queue = deque() # Since actions can share timestamp.
-
-        for module in updates:
-            name, version, timestamp, actions = module
-            if name not in supported:
-                if 'create' in actions:
-                    queue.appendleft((name, version))
-                elif 'new release' in actions or 'classifiers' in actions:
-                    queue.append((name, version))
-
-        for updated in queue: # Updates can come before new.
-            name, version = updated
-            meta = get_meta(name, version, client)
-            if classifiers.intersection(meta.get('classifiers')):
-                supported.add(name)
-                post_to_twitter(name, meta)
-
-    endprocessing = time()
-    processingtime = endprocessing - startprocessing
-    return processingtime
 
 def get_supported(classifiers=CLASSIFIERS, service=PYPI_SERVICE):
     """ Builds a set of the PYPI-projects currently listed under the provided
