@@ -22,6 +22,14 @@ def get_meta(name, version, client):
         meta = client.release_data(name, version)
     return meta
 
+def process_update_queue(queue):
+    for updated in queue: # Updates can come before new.
+        name, version = updated
+        meta = get_meta(name, version, client)
+        if classifiers.intersection(meta.get('classifiers')):
+            supported.add(name)
+            post_to_twitter(name, meta)
+
 def check_for_updates(supported, classifiers=CLASSIFIERS,
                       interval=QUERY_INTERVAL, service=PYPI_SERVICE):
     """ Checks for new projects and updates.
@@ -50,19 +58,14 @@ def check_for_updates(supported, classifiers=CLASSIFIERS,
                         queue.appendleft((name, version))
                     elif 'new release' in actions or 'classifiers' in actions:
                         queue.append((name, version))
-
-            for updated in queue: # Updates can come before new.
-                name, version = updated
-                meta = get_meta(name, version, client)
-                if classifiers.intersection(meta.get('classifiers')):
-                    supported.add(name)
-                    post_to_twitter(name, meta)
-        yield queue
+            try:
+                yield queue.pop()
+            except IndexError:
+                continue
+        
         if firstrun:
             firstrun = False
-        
-        
-    
+
 
 def get_supported(classifiers=CLASSIFIERS, service=PYPI_SERVICE):
     """ Builds a set of the PYPI-projects currently listed under the provided
