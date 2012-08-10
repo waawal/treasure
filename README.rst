@@ -1,10 +1,10 @@
 =====================================
-treasure - the pypi-bot
+Treasure - The PYPI-bot
 =====================================
 :Info: Read the `documentation <http://treasure.readthedocs.org>`_ hosted at readthedocs.
 :Author: Daniel Waardal
 
 
 Trove
-  *n.*
+  *n.*  
   A collection of valuable items discovered or found; a treasure-trove.
