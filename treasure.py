@@ -14,7 +14,8 @@ CLASSIFIERS = frozenset(('Programming Language :: Python :: 3',
                          ))
 
 
-def get_meta(name, version, client):
+def get_meta(name, version, service=PYPI_SERVICE):
+    client = xmlrpclib.ServerProxy(service)
     try:
         meta = client.release_data(name, version)
     except TypeError: # Sometimes None is returned from PYPI as the version.
@@ -22,13 +23,14 @@ def get_meta(name, version, client):
         meta = client.release_data(name, version)
     return meta
 
-def process_update_queue(queue):
+def process_update_queue(queue, classifiers=CLASSIFIER, ):
+    result = []
     for updated in queue: # Updates can come before new.
         name, version = updated
         meta = get_meta(name, version, client)
         if classifiers.intersection(meta.get('classifiers')):
-            supported.add(name)
-            post_to_twitter(name, meta)
+            result.append(name, meta)
+    return result
 
 def check_for_updates(supported, classifiers=CLASSIFIERS,
                       interval=QUERY_INTERVAL, service=PYPI_SERVICE):
@@ -41,6 +43,7 @@ def check_for_updates(supported, classifiers=CLASSIFIERS,
             endprocessing = time()
             processingtime = endprocessing - startprocessing
         sleep(processingtime)
+        result = []
         startprocessing = time() # Let's do this!
         client = xmlrpclib.ServerProxy(service)
         since = int(startprocessing - interval)
@@ -58,9 +61,11 @@ def check_for_updates(supported, classifiers=CLASSIFIERS,
                         queue.appendleft((name, version))
                     elif 'new release' in actions or 'classifiers' in actions:
                         queue.append((name, version))
+                result = process_update_queue(queue)
             try:
-                yield queue.pop()
-            except IndexError:
+                if result:
+                    yield queue.next()
+            except StopIteration:
                 continue
         
         if firstrun:
@@ -84,6 +89,6 @@ if __name__ == '__main__':
     supported = get_supported()
     sleep(QUERY_INTERVAL)
     while True:
-        processingtime = check_for_updates(supported)
-        sleep(QUERY_INTERVAL - processingtime) # Consider processing time.
+        for module in check_for_updates(supported)
+            print module
 
