@@ -8,3 +8,24 @@ Treasure - The PYPI-bot
 Trove
   *n.*  
   A collection of valuable items discovered or found; a treasure-trove.
+
+
+Examples
+--------
+
+::
+
+    from pprint import pprint
+    from treasure import troves
+    
+    CLASSIFIERS = ('Topic :: Internet :: WWW/HTTP :: WSGI',
+              Topic :: Internet :: WWW/HTTP :: WSGI :: Application,
+              Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware,
+              Topic :: Internet :: WWW/HTTP :: WSGI :: Server,
+              )
+    
+    for result in troves(CLASSIFIERS):
+        pprint result
+
+Reference:
+  http://pypi.python.org/pypi?%3Aaction=list_classifiers
