@@ -19,10 +19,10 @@ Examples
     from treasure import troves
     
     CLASSIFIERS = ('Topic :: Internet :: WWW/HTTP :: WSGI',
-              Topic :: Internet :: WWW/HTTP :: WSGI :: Application,
-              Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware,
-              Topic :: Internet :: WWW/HTTP :: WSGI :: Server,
-              )
+                   'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
+                   'Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware',
+                   'Topic :: Internet :: WWW/HTTP :: WSGI :: Server',
+                   )
     
     for result in troves(CLASSIFIERS):
         pprint result
