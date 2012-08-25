@@ -96,8 +96,3 @@ def troves(troves, interval=QUERY_INTERVAL, service=PYPI_SERVICE):
 
 def get_all():
     return check_for_updates(supported, troves, interval, service)
-
-if __name__ == '__main__':
-    from pprint import pprint
-    for result in troves(CLASSIFIERS):
-        pprint(result)
