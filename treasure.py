@@ -4,7 +4,7 @@ import xmlrpclib
 from collections import deque
 from time import time, sleep
 
-QUERY_INTERVAL = 15 # In seconds, intervals between queries to PYPI, 2 min.
+QUERY_INTERVAL = 120 # In seconds, intervals between queries to PYPI, 2 min.
 PYPI_SERVICE = 'http://pypi.python.org/pypi'
 CLASSIFIERS = frozenset(('Programming Language :: Python :: 3',
                          'Programming Language :: Python :: 3.0',
