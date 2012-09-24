@@ -12,13 +12,13 @@ Trove
 What is this alla about?
 ------------------------
 
-This is a library that queries pypi for updates of a sequence of troves during a certain time and processes the difference.
+This is a module that queries pypi for updates of a sequence of troves during a certain time and processes the difference.
 
 - It isn't using the ``pubsubhubbub`` interface though? - No, not yet at least.
 
 - Why was this created?
 
-*When creating the twitter-bot twittering under the py3k-handle (@py3k) I realized that checking for updates to trove-classifiers on pypi might be interesting for all kind of bott (IRC, XMPP etc.). That's why this module exist (it may be useful for much more than bots of course!).*
+* When creating the twitter-bot twittering under the py3k-handle (@py3k) I realized that checking for updates to trove-classifiers on pypi might be interesting for all kinds of bots (IRC, XMPP etc.). That's why this module exist.*
 
 Examples
 --------
